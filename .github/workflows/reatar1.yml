@@ -1,0 +1,29 @@
+
+name: IBM Cloud Auto Restart
+  
+on:
+  push:
+    branches: [ main ]
+  schedule:
+    - cron: '0 9 * * 6'
+  watch:
+    types: started
+
+jobs:
+  ibm-cloud-restart:
+    runs-on: ubuntu-latest
+    if: github.event.repository.owner.id == github.event.sender.id
+
+    steps:
+    - uses: actions/checkout@v2
+
+    - name: Install CF CLI
+      run: |
+        curl -L "https://packages.cloudfoundry.org/stable?release=linux64-binary&source=github&version=v6" | tar -zx
+        sudo mv cf /usr/local/bin
+      
+    - name: Login CF
+      run: cf l -a https://api.${{ secrets.RGN }}.cf.cloud.ibm.com login -u ${{ secrets.MAIL }} -p ${{ secrets.PWD }}
+      
+    - name: Restart CF APP
+      run: cf rs ${{ secrets.CFNAME }}
